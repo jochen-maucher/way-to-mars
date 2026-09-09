@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="de">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#08090d">
+	<meta name="description" content="Way to Mars - choose your path.">
+	<title>Way to Mars</title>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+		:root {
+			--ink: #eef0f3;
+			--muted: #989da8;
+			--night: #08090d;
+			--panel: rgba(13, 15, 21, .82);
+			--blue: #31a7ff;
+			--red: #ff4f54;
+			--thread: var(--blue);
+			--thread-glow: rgba(49, 167, 255, .52);
+			--side: 25vw;
+		}
+
+		* { box-sizing: border-box; }
+		html { scroll-behavior: smooth; }
+		body {
+			margin: 0;
+			background: var(--night);
+			color: var(--ink);
+			font-family: 'Space Grotesk', sans-serif;
+			overflow-x: hidden;
+		}
+		body::before {
+			content: '';
+			position: fixed;
+			inset: 0;
+			z-index: -2;
+			pointer-events: none;
+			background: radial-gradient(circle at 50% 8%, #1c202a 0, #0c0e14 35%, #08090d 72%);
+		}
+		.brand {
+			font-size: 12px;
+			font-weight: 600;
+			letter-spacing: .18em;
+			text-transform: uppercase;
+		}
+
+		.thread {
+			position: fixed;
+			z-index: 0;
+			top: 0;
+			bottom: 0;
+			left: var(--side);
+			width: 1px;
+			opacity: 0;
+			background: linear-gradient(to bottom, transparent 0, var(--thread) 12%, var(--thread) 88%, transparent 100%);
+			box-shadow: 0 0 16px var(--thread-glow), 0 0 4px var(--thread);
+			transition: opacity .8s ease, left .7s ease, background .7s ease, box-shadow .7s ease;
+		}
+		.is-chosen .thread { opacity: .9; }
+
+		main { position: relative; z-index: 1; }
+		.intro {
+			position: relative;
+			min-height: 100vh;
+			display: grid;
+			place-items: center;
+			padding: 100px 20px 70px;
+		}
+		.intro-copy {
+			position: absolute;
+			top: 15vh;
+			text-align: center;
+			transition: opacity .5s ease, transform .7s ease;
+		}
+		.eyebrow {
+			margin: 0 0 15px;
+			color: var(--muted);
+			font: 11px 'DM Mono', monospace;
+			letter-spacing: .2em;
+			text-transform: uppercase;
+		}
+		h1 {
+			margin: 0;
+			font-size: clamp(42px, 7vw, 92px);
+			font-weight: 500;
+			letter-spacing: -.07em;
+			line-height: .9;
+		}
+		.intro-image-wrap {
+			position: relative;
+			width: min(86vw, 1060px);
+			margin-top: 70px;
+			isolation: isolate;
+		}
+		.scene-image {
+			position: relative;
+			display: block;
+			width: 100%;
+			height: auto;
+			border: 1px solid rgba(255,255,255,.18);
+			box-shadow: 0 30px 90px rgba(0,0,0,.45);
+			z-index: 2;
+		}
+		.choice-panel {
+			position: absolute;
+			z-index: 3;
+			left: 50%;
+			bottom: -1px;
+			transform: translate(-50%, 50%);
+			width: min(82%, 590px);
+			display: flex;
+			align-items: center;
+			gap: 20px;
+			padding: 14px;
+			background: var(--panel);
+			border: 1px solid rgba(255,255,255,.18);
+			backdrop-filter: blur(18px);
+		}
+		.choice-label {
+			position: absolute;
+			top: 90px;
+			left: 50%;
+			transform: translateX(-50%);
+			white-space: nowrap;
+			color: #fff;
+			font: 20px 'DM Mono', monospace;
+			letter-spacing: .14em;
+			text-transform: uppercase;
+		}
+		.pill {
+			position: relative;
+			flex: 1;
+			min-height: 48px;
+			border: 0;
+			border-radius: 100px;
+			color: #fff;
+			cursor: pointer;
+			font: 600 13px 'Space Grotesk', sans-serif;
+			letter-spacing: .08em;
+			text-transform: uppercase;
+			transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+		}
+		.pill:hover, .pill:focus-visible { transform: translateY(-2px); filter: brightness(1.15); }
+		.pill:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+		.pill-blue { background: #147ac1; box-shadow: 0 8px 25px rgba(20,122,193,.3); }
+		.pill-red { background: #c9333b; box-shadow: 0 8px 25px rgba(201,51,59,.3); }
+
+		.is-chosen .intro-copy { opacity: .2; transform: translateY(-25px); }
+		.is-chosen .choice-panel { opacity: 0; pointer-events: none; transform: translate(-50%, 70%); transition: opacity .4s, transform .5s; }
+
+		.journey {
+			position: relative;
+			padding-bottom: 14vh;
+		}
+		.scene {
+			min-height: 100vh;
+			display: grid;
+			place-items: center;
+			padding: 12vh 20px;
+		}
+		.scene-frame {
+			position: relative;
+			width: min(86vw, 1060px);
+			opacity: .35;
+			transform: translateY(24px) scale(.98);
+			transition: opacity .8s ease, transform .8s ease;
+		}
+		.scene-frame.is-visible { opacity: 1; transform: translateY(0) scale(1); }
+
+		.scene-caption {
+			position: absolute;
+			right: 0;
+			bottom: -27px;
+			color: var(--muted);
+			font: 10px 'DM Mono', monospace;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+		}
+
+		.statement {
+			min-height: 75vh;
+			display: grid;
+			place-items: center;
+			padding: 15vh 8vw;
+			text-align: center;
+		}
+		.statement-inner { max-width: 720px; }
+		.statement h2 {
+			margin: 16px 0 24px;
+			font-size: clamp(32px, 5vw, 64px);
+			font-weight: 500;
+			letter-spacing: -.06em;
+			line-height: 1;
+		}
+		.statement p {
+			margin: 0 auto;
+			color: var(--muted);
+			font-size: 16px;
+			line-height: 1.8;
+		}
+		.restart {
+			margin-top: 42px;
+			padding: 12px 20px;
+			border: 1px solid rgba(255,255,255,.35);
+			background: transparent;
+			color: var(--ink);
+			cursor: pointer;
+			font: 11px 'DM Mono', monospace;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+			transition: background .2s, color .2s;
+		}
+		.restart:hover, .restart:focus-visible { background: var(--ink); color: var(--night); }
+		.restart:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+		.next-button {
+			position: relative;
+			z-index: 8;
+			margin: 28px auto 0;
+			width: 48px;
+			height: 48px;
+			display: grid;
+			place-items: center;
+			border: 1px solid rgba(255,255,255,.35);
+			border-radius: 50%;
+			background: rgba(8,9,13,.7);
+			color: #fff;
+			cursor: pointer;
+			opacity: 0;
+			pointer-events: none;
+			transform: translateY(10px);
+			transition: opacity .4s, transform .4s, background .2s;
+			backdrop-filter: blur(10px);
+		}
+		.next-button svg { width: 19px; height: 19px; }
+		.next-button:hover, .next-button:focus-visible { background: var(--thread); }
+		.next-button:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+		.is-chosen .scene.is-active .next-button { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+		@media (max-width: 620px) {
+			:root { --side: 22vw; }
+			.edition { display: none; }
+			.intro { padding: 110px 15px 70px; }
+			.intro-copy { top: 14vh; }
+			.intro-image-wrap, .scene-frame { width: 94vw; }
+			.choice-panel { width: calc(100% - 20px); gap: 10px; padding: 10px; }
+			.pill { min-height: 44px; font-size: 11px; }
+			.scene { padding: 13vh 10px; }
+			.scene-caption { right: 2px; }
+			.statement { min-height: 82vh; padding: 12vh 25px; }
+			.statement p { font-size: 14px; }
+			.next-button { margin-top: 22px; }
+		}
+		@media (prefers-reduced-motion: reduce) {
+			html { scroll-behavior: auto; }
+			*, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+		}
+	</style>
+</head>
+<body>
+	<div class="thread" aria-hidden="true"></div>
+
+	<main>
+		<section class="intro" id="start" aria-labelledby="page-title">
+			<div class="intro-copy">
+				<p class="eyebrow">A choice changes everything</p>
+				<h1 id="page-title">Way to Mars</h1>
+			</div>
+			<div class="intro-image-wrap">
+				<img class="scene-image" src="ai_gen_1.jpeg" alt="Geteilte Marslandschaft: ein blauer Weg links und ein roter Weg rechts">
+				<div class="choice-panel">
+					<span class="choice-label">Choose your path</span>
+					<button class="pill pill-blue" type="button" data-path="blue">Blue pill</button>
+					<button class="pill pill-red" type="button" data-path="red">Red pill</button>
+				</div>
+			</div>
+		</section>
+
+		<section class="journey" aria-label="Your journey">
+			<article class="scene" id="scene-2">
+				<div class="scene-frame"><img class="scene-image" src="ai_gen_2.jpeg" alt="Zweite Marslandschaft mit blauem und rotem Weg"><span class="scene-caption">Beyond the known</span><button class="next-button" type="button" aria-label="Zum nächsten Abschnitt scrollen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 4v15M6 13l6 6 6-6"/></svg></button></div>
+			</article>
+			<article class="scene" id="scene-3">
+				<div class="scene-frame"><img class="scene-image" src="ai_gen_3.jpeg" alt="Dritte Marslandschaft mit blauem und rotem Weg"><span class="scene-caption">Into the distance</span><button class="next-button" type="button" aria-label="Zum nächsten Abschnitt scrollen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 4v15M6 13l6 6 6-6"/></svg></button></div>
+			</article>
+			<article class="scene" id="scene-4">
+				<div class="scene-frame"><img class="scene-image" src="ai_gen_4.jpeg" alt="Vierte Marslandschaft mit blauem und rotem Weg"><span class="scene-caption">Almost there</span><button class="next-button" type="button" aria-label="Zum nächsten Abschnitt scrollen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 4v15M6 13l6 6 6-6"/></svg></button></div>
+			</article>
+		</section>
+
+		<section class="statement" id="statement" aria-labelledby="statement-title">
+			<div class="statement-inner">
+				<h2 id="statement-title">Do you like your path?</h2>
+				<p>;-)</p>
+				<button class="restart" type="button">Choose again</button>
+			</div>
+		</section>
+	</main>
+
+	<script>
+		const body = document.body;
+		const intro = document.querySelector('#start');
+		const thread = document.querySelector('.thread');
+		const nextButtons = [...document.querySelectorAll('.next-button')];
+		const restartButton = document.querySelector('.restart');
+		const scenes = [...document.querySelectorAll('.scene')];
+		const frames = [...document.querySelectorAll('.scene-frame')];
+		const pathButtons = [...document.querySelectorAll('[data-path]')];
+		let selectedPath = null;
+
+		function choosePath(path) {
+			selectedPath = path;
+			body.classList.add('is-chosen');
+			body.dataset.path = path;
+			const isBlue = path === 'blue';
+			thread.style.setProperty('--thread', isBlue ? 'var(--blue)' : 'var(--red)');
+			thread.style.setProperty('--thread-glow', isBlue ? 'rgba(49, 167, 255, .52)' : 'rgba(255, 79, 84, .52)');
+			thread.style.left = isBlue ? 'var(--side)' : 'calc(100vw - var(--side))';
+			document.querySelector('#scene-2').scrollIntoView({ behavior: 'smooth', block: 'start' });
+			nextButtons[0].focus({ preventScroll: true });
+		}
+
+		function scrollNext(event) {
+			if (!selectedPath) return;
+			const currentScene = event.currentTarget.closest('.scene');
+			const current = scenes.indexOf(currentScene);
+			const target = scenes[current + 1] || document.querySelector('#statement');
+			target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+
+		function resetJourney() {
+			selectedPath = null;
+			body.classList.remove('is-chosen');
+			delete body.dataset.path;
+			thread.style.left = 'var(--side)';
+			intro.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+
+		pathButtons.forEach((button) => button.addEventListener('click', () => choosePath(button.dataset.path)));
+		nextButtons.forEach((button) => button.addEventListener('click', scrollNext));
+		restartButton.addEventListener('click', resetJourney);
+
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) entry.target.classList.add('is-visible');
+			});
+		}, { threshold: .35 });
+		frames.forEach((frame) => observer.observe(frame));
+
+		const sceneObserver = new IntersectionObserver((entries) => {
+			entries.forEach((entry) => entry.target.classList.toggle('is-active', entry.isIntersecting));
+		}, { threshold: .55 });
+		scenes.forEach((scene) => sceneObserver.observe(scene));
+	</script>
+</body>
+</html>
